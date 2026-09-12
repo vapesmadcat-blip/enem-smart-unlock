@@ -1,11 +1,69 @@
 package com.enem.smartunlock.data
 
-data class Question(
-    val title: String = "",
-    val alternatives: List<Alternative> = emptyList()
+/** Questão normalizada para o desafio da tela de bloqueio. */
+data class LocalQuestion(
+    val subject: String,
+    val text: String,
+    options: List<String>,
+    val correct: Int,
+    val source: String = "Banco local"
+) {
+    // O ENEM usa cinco alternativas (A–E). O fallback também mantém o mesmo contrato visual.
+    val options: List<String> = options
+        .filter { it.isNotBlank() }
+        .take(5)
+        .let { values -> values + List((5 - values.size).coerceAtLeast(0)) { "Nenhuma das anteriores" } }
+        .take(5)
+}
+
+data class EnemQuestionsResponse(
+    val metadata: EnemMetadata? = null,
+    val questions: List<EnemQuestion> = emptyList()
 )
 
-data class Alternative(
-    val text: String = "",
+data class EnemMetadata(
+    val limit: Int = 0,
+    val offset: Int = 0,
+    val total: Int = 0,
+    val hasMore: Boolean = false
+)
+
+data class EnemQuestion(
+    val title: String? = null,
+    val index: Int? = null,
+    val discipline: String? = null,
+    val language: String? = null,
+    val year: Int? = null,
+    val context: String? = null,
+    val correctAlternative: String? = null,
+    val alternativesIntroduction: String? = null,
+    val alternatives: List<EnemAlternative> = emptyList()
+)
+
+data class EnemAlternative(
+    val letter: String? = null,
+    val text: String? = null,
     val isCorrect: Boolean = false
 )
+
+fun EnemQuestion.toLocalQuestion(): LocalQuestion? {
+    val alternatives = alternatives
+        .sortedBy { it.letter.orEmpty() }
+        .filter { !it.text.isNullOrBlank() }
+    val correctLetter = correctAlternative?.trim()?.uppercase()
+    val correctIndex = alternatives.indexOfFirst {
+        it.letter?.trim()?.uppercase() == correctLetter || it.isCorrect
+    }
+    val statement = listOfNotNull(title, context, alternativesIntroduction)
+        .joinToString("\n\n")
+        .trim()
+    if (statement.isBlank() || alternatives.size != 5 || correctIndex !in 0..4) return null
+
+    return LocalQuestion(
+        subject = discipline?.replaceFirstChar { it.uppercase() } ?: "ENEM",
+        text = statement,
+        options = alternatives.map { it.text!!.trim() },
+        correct = correctIndex,
+        source = "API ENEM"
+    )
+}

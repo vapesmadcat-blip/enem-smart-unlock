@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.enem.smartunlock.api.QuestionRepository
 import com.enem.smartunlock.data.LocalQuestion
 import com.enem.smartunlock.data.QuestionBank
 import kotlinx.coroutines.delay
@@ -87,8 +88,12 @@ class LockScreenActivity : ComponentActivity() {
 
 @Composable
 fun ChallengeScreen(onUnlocked: (Int) -> Unit, vibrator: Vibrator?) {
-    val questions = remember {
-        QuestionBank.getRandomQuestions(3)
+    var questions by remember { mutableStateOf(QuestionBank.getRandomQuestions(20)) }
+    var loadingRemote by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        questions = QuestionRepository.getQuestions(20)
+        loadingRemote = false
     }
 
     var index by remember { mutableStateOf(0) }
@@ -100,7 +105,7 @@ fun ChallengeScreen(onUnlocked: (Int) -> Unit, vibrator: Vibrator?) {
 
     val required = 3
     val remaining = required - streak
-    val q = if (index < questions.size) questions[index] else questions[0]
+    val q = questions[index % questions.size]
 
     val deepBlue = Color(0xFF0B1A2F)
     val cardBlue = Color(0xFF122B3F)
@@ -134,7 +139,7 @@ fun ChallengeScreen(onUnlocked: (Int) -> Unit, vibrator: Vibrator?) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Modo Estudo",
+                text = if (loadingRemote) "Modo Estudo · carregando API ENEM" else "Modo Estudo",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -172,7 +177,7 @@ fun ChallengeScreen(onUnlocked: (Int) -> Unit, vibrator: Vibrator?) {
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = q.subject,
+                        text = "${q.subject} · ${q.source} · 5 alternativas",
                         color = softBlue,
                         fontWeight = FontWeight.Bold
                     )
