@@ -75,6 +75,7 @@ class LockScreenActivity : ComponentActivity() {
                 },
                 vibrator = vibrator
             )
+        }
         } catch (e: Exception) {
             e.printStackTrace()
             finish()
