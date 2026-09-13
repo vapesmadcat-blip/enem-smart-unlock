@@ -294,7 +294,7 @@ object QuestionBank {
     }
 }
 
-data class LocalQuestion(
+class LocalQuestion(
     val subject: String,
     val text: String,
     options: List<String>,
