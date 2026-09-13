@@ -297,6 +297,13 @@ object QuestionBank {
 data class LocalQuestion(
     val subject: String,
     val text: String,
-    val options: List<String>,
-    val correct: Int
-)
+    options: List<String>,
+    val correct: Int,
+    val source: String = "Banco local"
+) {
+    val options: List<String> = options
+        .filter { it.isNotBlank() }
+        .take(5)
+        .let { values -> values + List((5 - values.size).coerceAtLeast(0)) { "Nenhuma das anteriores" } }
+        .take(5)
+}

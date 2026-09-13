@@ -1,21 +1,5 @@
 package com.enem.smartunlock.data
 
-/** Questão normalizada para o desafio da tela de bloqueio. */
-data class LocalQuestion(
-    val subject: String,
-    val text: String,
-    options: List<String>,
-    val correct: Int,
-    val source: String = "Banco local"
-) {
-    // O ENEM usa cinco alternativas (A–E). O fallback também mantém o mesmo contrato visual.
-    val options: List<String> = options
-        .filter { it.isNotBlank() }
-        .take(5)
-        .let { values -> values + List((5 - values.size).coerceAtLeast(0)) { "Nenhuma das anteriores" } }
-        .take(5)
-}
-
 data class EnemQuestionsResponse(
     val metadata: EnemMetadata? = null,
     val questions: List<EnemQuestion> = emptyList()
